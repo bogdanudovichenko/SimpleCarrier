@@ -237,5 +237,5 @@ _Pvt_Extensions
 .idea/
 
 #frontend dist folder
-./wwwroot
+/wwwroot
 
