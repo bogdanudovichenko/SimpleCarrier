@@ -1,50 +1,127 @@
 ﻿using Dapper;
+using FastMapper.NetCore;
 using SimpleCarrier.Common.GetItems;
 using SimpleCarrier.Domain.Entities.Users;
-using SimpleCarrier.Domain.RepositoryInterfaces.Base;
 using SimpleCarrier.Domain.RepositoryInterfaces.Users;
+using SimpleCarrier.Infrastructure.Repositories.DbModels;
 using SimpleCarrier.Infrastructure.Repositories.Postgres.Dapper.Base;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SimpleCarrier.Infrastructure.Repositories.Postgres.Dapper.Users
 {
     public class PostgresDapperUserRepository : PostgreDapperBaseRepository, IUserRepository
     {
-        public PostgresDapperUserRepository(String connection) : base(connection)
+        private readonly IRoleRepository _roleRepository;
+
+        public PostgresDapperUserRepository(string connection, IRoleRepository roleRepository) : this(connection)
+        {
+            _roleRepository = roleRepository;
+        }
+
+        public PostgresDapperUserRepository(string connection) : base(connection)
         {
         }
 
-        public Task AddToRoleAsync(Int32 id, String role)
+        public async Task AddToRoleAsync(Int32 id, String role)
         {
-            throw new NotImplementedException();
+            User findedUser = await FindByIdAsync(id);
+            if (findedUser == null) return;
+
+            Role findedRole = await _roleRepository.FindByNameAsync(role);
+            if (findedRole == null) return;
+
+            findedUser.Roles.Add(findedRole);
+            await UpdateAsync(findedUser);
         }
 
-        public Task CreateAsync(User item)
+        public async Task CreateAsync(User item)
         {
-            throw new NotImplementedException();
+            if (item == null) throw new ArgumentNullException(nameof(item));
+
+            var userDbModel = TypeAdapter.Adapt<User, UserDbModel>(item);
+
+            string query = $@"INSERT INTO {_usersTableName} 
+                              (
+                               {nameof(UserDbModel.Id)}, 
+                               {nameof(UserDbModel.UserName)},
+                               {nameof(UserDbModel.Password)}
+                              ) 
+                              VALUES
+                              (
+                               @{nameof(UserDbModel.Id)}, 
+                               @{nameof(UserDbModel.UserName)},
+                               @{nameof(UserDbModel.Password)}
+                              )";
+
+            using (IDbConnection db = OpenedConnection)
+            {
+                IDbTransaction transaction = db.BeginTransaction();
+
+                var userProfileDbModel = TypeAdapter.Adapt<UserProfile, UserProfileDbModel>(item.UserProfile);
+
+                string userProfileQuery = $@"INSERT INTO {_userProfilesTable}
+                                                  ({nameof(UserProfileDbModel.FirstName)}, {nameof(UserProfileDbModel.LastName)})
+                                            VALUES(@{nameof(UserProfileDbModel.FirstName)}, @{nameof(UserProfileDbModel.LastName)})";
+
+                int createdUserProfileId = await db.QuerySingleAsync<int>(userProfileQuery, userProfileDbModel);
+
+                userDbModel.UserProfileId = createdUserProfileId;
+                await db.ExecuteAsync(query, userDbModel);
+
+                foreach(Role role in item.Roles)
+                {
+                    RoleDbModel roleDbModel = TypeAdapter.Adapt<Role, RoleDbModel>(role);
+
+                    string roleQuery = $@"INSERT INTO {_userRolesTableName} 
+                                               ({nameof(UserRoleDbModel.UserId)},  {nameof(UserRoleDbModel.RoleId)})
+                                        VALUES(@{nameof(UserRoleDbModel.UserId)}, @{nameof(UserRoleDbModel.RoleId)})";
+
+                    await db.ExecuteAsync(roleQuery, roleDbModel);                
+                }
+
+                transaction.Commit();
+            }
         }
 
-        public Task DeleteAsync(Int32 id)
+        public async Task DeleteAsync(Int32 id)
         {
-            throw new NotImplementedException();
+            User findedUser = await FindByIdAsync(id);
+            if (findedUser == null) return;
+
+            using (IDbConnection db = OpenedConnection)
+            {
+                await db.ExecuteAsync($"DELETE FROM {_usersTableName} WHERE id=@id", new { id });
+            }
         }
 
-        public Task<User> FindByIdAsync(Int32 id)
+        public async Task<User> FindByIdAsync(Int32 id)
         {
-            throw new NotImplementedException();
+            using (IDbConnection db = OpenedConnection)
+            {
+                var findedUserDbModel = await db.QuerySingleAsync<UserDbModel>($"SELECT * FROM {_usersTableName} WHERE WHERE id=@id", new { id });
+                var findedUser = TypeAdapter.Adapt<UserDbModel, User>(findedUserDbModel);
 
-            //using(IDbConnection db = OpenedConnection)
-            //{
-            //    db.Query<User>()
-            //}
+                return findedUser;
+            }
         }
 
-        public Boolean FindByUserNameAsync(String userName)
+        public async Task<User> FindByUserNameAsync(String userName)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(userName)) throw new ArgumentNullException(nameof(userName));
+
+            string query = $"SELECT * FROM { _usersTableName} WHERE WHERE {nameof(UserDbModel.UserName)} = @{nameof(UserDbModel.UserName)}";
+
+            using (IDbConnection db = OpenedConnection)
+            {
+                var findedUserDbModel = await db.QuerySingleAsync<UserDbModel>(query, new UserDbModel { UserName = userName });
+                var findedUser = TypeAdapter.Adapt<UserDbModel, User>(findedUserDbModel);
+
+                return findedUser;
+            }
         }
 
         public Task<ItemsWithTotalCountModel<User>> Get(GetItemsModel getItemsModel)
@@ -52,26 +129,56 @@ namespace SimpleCarrier.Infrastructure.Repositories.Postgres.Dapper.Users
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<User>> GetAllAsync()
+        public async Task<IEnumerable<User>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            using (IDbConnection db = OpenedConnection)
+            {
+                var usersFromDb = await db.QueryAsync<UserDbModel>($"SELECT * FROM {_usersTableName}");
+                var users = TypeAdapter.Adapt<IEnumerable<UserDbModel>, IEnumerable<User>>(usersFromDb);
+                return users;
+            }
         }
 
-        public Task<IEnumerable<Role>> GetRolesAsync(Int32 id)
+        public async Task<IEnumerable<Role>> GetRolesAsync(Int32 id)
         {
-            throw new NotImplementedException();
+            string query = $@"SELECT * 
+                              FROM {_rolesTableName} 
+                              INNER JOIN {_userRolesTableName} ON {_rolesTableName}.id = {nameof(UserRoleDbModel.RoleId)}
+                              INNER JOIN {_usersTableName} ON {_userRolesTableName}.{nameof(UserRoleDbModel.UserId)} = {_usersTableName}.id
+                              WHERE {_usersTableName}.id = @id
+                              ORDER BY {nameof(RoleDbModel.Name)}";
+
+            using (IDbConnection db = OpenedConnection)
+            {
+                var rolesFromDb = await db.QueryAsync<RoleDbModel>(query, new { id });
+                var roles = TypeAdapter.Adapt<IEnumerable<RoleDbModel>, IEnumerable<Role>>(rolesFromDb);
+                return roles;
+            }
         }
 
-        public Boolean IsInRoleAsync(Int32 id)
+        public async Task<bool> IsInRoleAsync(Int32 id, string role)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(role)) throw new ArgumentNullException(nameof(role));
+
+            IEnumerable<Role> roles = await GetRolesAsync(id);
+            bool result = roles.Any(r => r.Name.ToLower() == role.ToLower());
+            return result;
         }
 
-        public Task RemoveFromRoleAsync(Int32 id, String role)
+        public async Task RemoveFromRoleAsync(Int32 id, String role)
         {
-            throw new NotImplementedException();
-        }
+            Role roleModel = await _roleRepository.FindByNameAsync(role);
+            if (role == null) return;
 
+            string query = $@"DELETE FROM {_userRolesTableName}
+                              WHERE {nameof(UserRoleDbModel.UserId)} = @id AND {nameof(UserRoleDbModel.RoleId)} = @roleId";
+
+            using (IDbConnection db = OpenedConnection)
+            {
+                await db.ExecuteAsync(query, new { id, roleId = roleModel.Id });
+            }
+        }
+        
         public Task UpdateAsync(User item)
         {
             throw new NotImplementedException();

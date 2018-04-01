@@ -23,5 +23,10 @@ namespace SimpleCarrier.Infrastructure.Repositories.Postgres.Dapper.Base
                 return db;
             }
         }
+
+        protected const string _usersTableName = "Users";
+        protected const string _rolesTableName = "Roles";
+        protected const string _userRolesTableName = "UserRoles";
+        protected const string _userProfilesTable = "UserProfiles";
     }
 }

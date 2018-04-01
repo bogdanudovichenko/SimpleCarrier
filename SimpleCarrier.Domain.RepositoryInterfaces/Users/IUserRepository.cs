@@ -7,8 +7,8 @@ namespace SimpleCarrier.Domain.RepositoryInterfaces.Users
 {
     public interface IUserRepository : IBaseRepository<User>
     {
-        bool IsInRoleAsync(int id);
-        bool FindByUserNameAsync(string userName);
+        Task<bool> IsInRoleAsync(int id, string role);
+        Task<User> FindByUserNameAsync(string userName);
 
         Task<IEnumerable<Role>> GetRolesAsync(int id);
         Task AddToRoleAsync(int id, string role);
