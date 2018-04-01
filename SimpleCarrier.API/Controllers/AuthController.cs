@@ -24,7 +24,7 @@ namespace SimpleCarrier.API.Controllers
 
         [HttpPost]
         [Route("Token")]
-        public ActionResult Token([FromForm] LoginModel loginModel)
+        public ActionResult Token([FromBody] LoginModel loginModel)
         {
             if (!ModelState.IsValid) return BadRequest(loginModel);
 
@@ -52,7 +52,7 @@ namespace SimpleCarrier.API.Controllers
 
             return Ok(new
             {
-                AaccessToken = generatedTokens.accessToken,
+                AccessToken = generatedTokens.accessToken,
                 RefreshToken = generatedTokens.refreshToken
             });
         }

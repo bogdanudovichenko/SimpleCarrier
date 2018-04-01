@@ -1,9 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.0.0
-MinimumVisualStudioVersion = 10.0.0.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCarrier.API", "SimpleCarrier.API\SimpleCarrier.API.csproj", "{1D673C13-BACD-4506-B598-AD13140A54DD}"
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleCarrier.API", "SimpleCarrier.API\SimpleCarrier.API.csproj", "{1D673C13-BACD-4506-B598-AD13140A54DD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{25E1DEC0-2D7F-4F4D-8EC9-7472B8EBD8F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCarrier.Domain.Entities", "SimpleCarrier.Domain.Entities\SimpleCarrier.Domain.Entities.csproj", "{33D223F2-EBFE-42DF-8DA6-5B1872128B8C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCarrier.Domain.RepositoryInterfaces", "SimpleCarrier.Domain.RepositoryInterfaces\SimpleCarrier.Domain.RepositoryInterfaces.csproj", "{631E4274-7434-4EDC-A7C1-87A6BE0E735B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCarrier.Common", "SimpleCarrier.Common\SimpleCarrier.Common.csproj", "{28DD723F-419A-40F1-A424-704BAD36363C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{05CEA7AF-42D6-485F-A367-892686D291A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCarrier.Infrastructure.Repositories", "SimpleCarrier.Infrastructure.Repositories\SimpleCarrier.Infrastructure.Repositories.csproj", "{A1EB9C7A-64B7-451C-A6BB-6EEA6BF96346}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,8 +27,32 @@ Global
 		{1D673C13-BACD-4506-B598-AD13140A54DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D673C13-BACD-4506-B598-AD13140A54DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1D673C13-BACD-4506-B598-AD13140A54DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33D223F2-EBFE-42DF-8DA6-5B1872128B8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33D223F2-EBFE-42DF-8DA6-5B1872128B8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33D223F2-EBFE-42DF-8DA6-5B1872128B8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33D223F2-EBFE-42DF-8DA6-5B1872128B8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{631E4274-7434-4EDC-A7C1-87A6BE0E735B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{631E4274-7434-4EDC-A7C1-87A6BE0E735B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{631E4274-7434-4EDC-A7C1-87A6BE0E735B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{631E4274-7434-4EDC-A7C1-87A6BE0E735B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28DD723F-419A-40F1-A424-704BAD36363C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28DD723F-419A-40F1-A424-704BAD36363C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28DD723F-419A-40F1-A424-704BAD36363C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28DD723F-419A-40F1-A424-704BAD36363C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1EB9C7A-64B7-451C-A6BB-6EEA6BF96346}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1EB9C7A-64B7-451C-A6BB-6EEA6BF96346}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1EB9C7A-64B7-451C-A6BB-6EEA6BF96346}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1EB9C7A-64B7-451C-A6BB-6EEA6BF96346}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{33D223F2-EBFE-42DF-8DA6-5B1872128B8C} = {25E1DEC0-2D7F-4F4D-8EC9-7472B8EBD8F9}
+		{631E4274-7434-4EDC-A7C1-87A6BE0E735B} = {25E1DEC0-2D7F-4F4D-8EC9-7472B8EBD8F9}
+		{A1EB9C7A-64B7-451C-A6BB-6EEA6BF96346} = {05CEA7AF-42D6-485F-A367-892686D291A1}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A89B45E1-CA3A-417D-B52C-3EF8348AB01C}
 	EndGlobalSection
 EndGlobal

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -11,8 +6,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SimpleCarrier.API.Options;
 
@@ -43,7 +36,7 @@ namespace SimpleCarrier.API
                 .AddJwtBearer(options =>
                 {
                     options.RequireHttpsMetadata = false;
-                    
+
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
@@ -55,7 +48,12 @@ namespace SimpleCarrier.API
                     };
                 });
 
-            services.AddMvc();
+            services
+                .AddMvc()
+                .AddJsonOptions(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -66,9 +64,11 @@ namespace SimpleCarrier.API
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseDefaultFiles();
-            app.UseStaticFiles();
-            app.UseMvc();
+            app
+               .UseCors(c => c.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader())
+               .UseDefaultFiles()
+               .UseStaticFiles()
+               .UseMvc();
 
             app.Run(async (context) =>
             {
