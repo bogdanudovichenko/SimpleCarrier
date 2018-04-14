@@ -3,32 +3,36 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using SimpleCarrier.API.Options;
 using SimpleCarrier.API.ViewModels.Auth;
+using SimpleCarrier.Domain.Entities.Users;
+using SimpleCarrier.Domain.RepositoryInterfaces.Users;
 
 namespace SimpleCarrier.API.Controllers
 {
     [Route("api/[controller]")]
     public class AuthController : Controller
     {
-        private readonly List<User> _users = new List<User>
-        {
-            new User {UserName = "admin@gmail.com", Password = "12345", Role = "admin"},
-            new User {UserName = "qwerty", Password = "55555", Role = "user"}
-        };
-        
+        private readonly IUserRepository _userRepository;
         private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
+
+        public AuthController(IUserRepository userRepository)
+        {
+            _userRepository = userRepository;
+        }
 
         [HttpPost]
         [Route("Token")]
-        public ActionResult Token([FromBody] LoginModel loginModel)
+        public async Task<ActionResult> Token([FromBody] LoginModel loginModel)
         {
             if (!ModelState.IsValid) return BadRequest(loginModel);
 
-            User findedUser = _users.FirstOrDefault(u => u.UserName == loginModel.UserName);
+            User findedUser = await _userRepository.FindByUserNameAsync(loginModel.UserName);
 
             if (findedUser == null)
             {
@@ -39,7 +43,7 @@ namespace SimpleCarrier.API.Controllers
                 }));
             }
 
-            if (findedUser.Password != loginModel.Password)
+            if (!(await _userRepository.CheckPasswordAsync(findedUser, loginModel.Password)))
             {
                 return BadRequest(JsonConvert.SerializeObject(new
                 {
@@ -48,7 +52,7 @@ namespace SimpleCarrier.API.Controllers
                 }));
             }
 
-            (string accessToken, string refreshToken) generatedTokens = _GenerateTokens(loginModel.UserName);  
+            (string accessToken, string refreshToken) generatedTokens = await _GenerateTokens(loginModel.UserName);  
 
             return Ok(new
             {
@@ -59,7 +63,7 @@ namespace SimpleCarrier.API.Controllers
 
         [HttpPost]
         [Route("RefreshToken")]
-        public ActionResult RefreshToken([FromForm] RefreshTokenModel refreshTokenModel)
+        public async Task<ActionResult> RefreshToken([FromForm] RefreshTokenModel refreshTokenModel)
         {
             if (!ModelState.IsValid) return BadRequest(refreshTokenModel);
 
@@ -99,7 +103,7 @@ namespace SimpleCarrier.API.Controllers
                 }));
             }
 
-            User user = _users.FirstOrDefault(u => u.UserName == userNameClaim.Value);
+            User user = await _userRepository.FindByUserNameAsync(userNameClaim.Value);
             
             if (user == null)
             {
@@ -110,7 +114,7 @@ namespace SimpleCarrier.API.Controllers
                 }));
             }
             
-            (string accessToken, string refreshToken) generatedTokens = _GenerateTokens(userNameClaim.Value);  
+            (string accessToken, string refreshToken) generatedTokens = await _GenerateTokens(userNameClaim.Value);  
 
             return Ok(new
             {
@@ -119,9 +123,9 @@ namespace SimpleCarrier.API.Controllers
             });
         }
 
-        private (string accessToken, string RefreshToken) _GenerateTokens(string userName)
+        private async Task<(string accessToken, string RefreshToken)> _GenerateTokens(string userName)
         {
-            ClaimsIdentity identity = _GetIdentity(userName);
+            ClaimsIdentity identity = await _GetIdentity(userName);
             DateTime now = DateTime.Now;
 
             var accessToken = new JwtSecurityToken(
@@ -147,16 +151,22 @@ namespace SimpleCarrier.API.Controllers
             return (accessTokenEncoded, refreshTokenEncoded);
         }
         
-        private ClaimsIdentity _GetIdentity(string username)
+        private async Task<ClaimsIdentity> _GetIdentity(string userName)
         {
-            User user = _users.FirstOrDefault(x => x.UserName == username);
+            User user = await _userRepository.FindByUserNameAsync(userName);
+
             if (user == null) return null;
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserName),
-                new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role)
+                new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserName)
             };
+
+
+            foreach(Role role in user.Roles)
+            {
+                claims.Add(new Claim(ClaimsIdentity.DefaultRoleClaimType, role.Name));
+            }
 
             var claimsIdentity = new ClaimsIdentity(
                 claims,
@@ -166,12 +176,5 @@ namespace SimpleCarrier.API.Controllers
 
             return claimsIdentity;
         }
-    }
-
-    internal class User
-    {
-        public string UserName { get; set; }
-        public string Password { get; set; }
-        public string Role { get; set; }
     }
 }

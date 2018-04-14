@@ -1,8 +1,8 @@
-﻿namespace SimpleCarrier.Infrastructure.Repositories.DbModels
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace SimpleCarrier.Infrastructure.Repositories.DbModels
 {
-    public class RoleDbModel : BaseDbModel
+    public class RoleDbModel : IdentityRole<int>
     {
-        public string Name { get; set; }
-        public int UserId { get; set; }
     }
 }

@@ -47,14 +47,12 @@ namespace SimpleCarrier.Infrastructure.Repositories.Postgres.Dapper.Users
             string query = $@"INSERT INTO {_usersTableName} 
                               (
                                {nameof(UserDbModel.Id)}, 
-                               {nameof(UserDbModel.UserName)},
-                               {nameof(UserDbModel.Password)}
+                               {nameof(UserDbModel.UserName)}
                               ) 
                               VALUES
                               (
                                @{nameof(UserDbModel.Id)}, 
-                               @{nameof(UserDbModel.UserName)},
-                               @{nameof(UserDbModel.Password)}
+                               @{nameof(UserDbModel.UserName)}
                               )";
 
             using (IDbConnection db = OpenedConnection)
@@ -71,18 +69,6 @@ namespace SimpleCarrier.Infrastructure.Repositories.Postgres.Dapper.Users
 
                 userDbModel.UserProfileId = createdUserProfileId;
                 await db.ExecuteAsync(query, userDbModel);
-
-                foreach(Role role in item.Roles)
-                {
-                    RoleDbModel roleDbModel = TypeAdapter.Adapt<Role, RoleDbModel>(role);
-
-                    string roleQuery = $@"INSERT INTO {_userRolesTableName} 
-                                               ({nameof(UserRoleDbModel.UserId)},  {nameof(UserRoleDbModel.RoleId)})
-                                        VALUES(@{nameof(UserRoleDbModel.UserId)}, @{nameof(UserRoleDbModel.RoleId)})";
-
-                    await db.ExecuteAsync(roleQuery, roleDbModel);                
-                }
-
                 transaction.Commit();
             }
         }
@@ -141,19 +127,20 @@ namespace SimpleCarrier.Infrastructure.Repositories.Postgres.Dapper.Users
 
         public async Task<IEnumerable<Role>> GetRolesAsync(Int32 id)
         {
-            string query = $@"SELECT * 
-                              FROM {_rolesTableName} 
-                              INNER JOIN {_userRolesTableName} ON {_rolesTableName}.id = {nameof(UserRoleDbModel.RoleId)}
-                              INNER JOIN {_usersTableName} ON {_userRolesTableName}.{nameof(UserRoleDbModel.UserId)} = {_usersTableName}.id
-                              WHERE {_usersTableName}.id = @id
-                              ORDER BY {nameof(RoleDbModel.Name)}";
+            //string query = $@"SELECT * 
+            //                  FROM {_rolesTableName} 
+            //                  INNER JOIN {_userRolesTableName} ON {_rolesTableName}.id = {nameof(RoleDbModel.RoleId)}
+            //                  INNER JOIN {_usersTableName} ON {_userRolesTableName}.{nameof(RoleDbModel.UserId)} = {_usersTableName}.id
+            //                  WHERE {_usersTableName}.id = @id";
 
-            using (IDbConnection db = OpenedConnection)
-            {
-                var rolesFromDb = await db.QueryAsync<RoleDbModel>(query, new { id });
-                var roles = TypeAdapter.Adapt<IEnumerable<RoleDbModel>, IEnumerable<Role>>(rolesFromDb);
-                return roles;
-            }
+            throw new NotImplementedException();
+
+            //using (IDbConnection db = OpenedConnection)
+            //{
+            //    var rolesFromDb = await db.QueryAsync<RoleDbModel>(query, new { id });
+            //    var roles = TypeAdapter.Adapt<IEnumerable<RoleDbModel>, IEnumerable<Role>>(rolesFromDb);
+            //    return roles;
+            //}
         }
 
         public async Task<bool> IsInRoleAsync(Int32 id, string role)
@@ -167,19 +154,26 @@ namespace SimpleCarrier.Infrastructure.Repositories.Postgres.Dapper.Users
 
         public async Task RemoveFromRoleAsync(Int32 id, String role)
         {
-            Role roleModel = await _roleRepository.FindByNameAsync(role);
-            if (role == null) return;
+            throw new NotImplementedException();
 
-            string query = $@"DELETE FROM {_userRolesTableName}
-                              WHERE {nameof(UserRoleDbModel.UserId)} = @id AND {nameof(UserRoleDbModel.RoleId)} = @roleId";
+            //Role roleModel = await _roleRepository.FindByNameAsync(role);
+            //if (role == null) return;
 
-            using (IDbConnection db = OpenedConnection)
-            {
-                await db.ExecuteAsync(query, new { id, roleId = roleModel.Id });
-            }
+            //string query = $@"DELETE FROM {_userRolesTableName}
+            //                  WHERE {nameof(RoleDbModel.UserId)} = @id AND {nameof(RoleDbModel.RoleId)} = @roleId";
+
+            //using (IDbConnection db = OpenedConnection)
+            //{
+            //    await db.ExecuteAsync(query, new { id, roleId = roleModel.Id });
+            //}
         }
         
         public Task UpdateAsync(User item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Boolean> CheckPasswordAsync(User user, String password)
         {
             throw new NotImplementedException();
         }

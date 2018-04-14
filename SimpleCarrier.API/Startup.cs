@@ -4,10 +4,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using SimpleCarrier.API.Options;
+using SimpleCarrier.Infrastructure.Repositories.DbModels;
+using SimpleCarrier.Infrastructure.Repositories.Postgres.EntityFrameworkCore;
 
 namespace SimpleCarrier.API
 {
@@ -23,6 +27,12 @@ namespace SimpleCarrier.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddDbContext<SimpleCarrierDbContext>(options =>
+                options.UseNpgsql("Host=localhost;Port=5432;Database=SimpleCarrier;Username=postgres;Password=password"));
+
+            services.AddIdentity<UserDbModel, RoleDbModel>()
+                .AddEntityFrameworkStores<SimpleCarrierDbContext>();
 
             services.AddAuthorization(options =>
             {
@@ -53,7 +63,7 @@ namespace SimpleCarrier.API
                 .AddJsonOptions(options =>
                 {
                     options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
-                });
+                });           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

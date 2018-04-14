@@ -1,9 +1,10 @@
-﻿namespace SimpleCarrier.Infrastructure.Repositories.DbModels
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace SimpleCarrier.Infrastructure.Repositories.DbModels
 {
-    public class UserDbModel : BaseDbModel
+    public class UserDbModel : IdentityUser<int>
     {
-        public string UserName { get; set; }
-        public string Password { get; set; }
         public int UserProfileId { get; set; }
+        public UserProfileDbModel UserProfile { get; set; }
     }
 }
