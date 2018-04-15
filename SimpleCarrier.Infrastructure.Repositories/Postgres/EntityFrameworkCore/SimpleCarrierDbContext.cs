@@ -8,6 +8,7 @@ namespace SimpleCarrier.Infrastructure.Repositories.Postgres.EntityFrameworkCore
     {
         public SimpleCarrierDbContext(DbContextOptions<SimpleCarrierDbContext> options) : base(options)
         {
+
         }
     }
 }

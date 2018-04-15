@@ -67,7 +67,7 @@ namespace SimpleCarrier.Infrastructure.Repositories.Postgres.Dapper.Users
 
                 int createdUserProfileId = await db.QuerySingleAsync<int>(userProfileQuery, userProfileDbModel);
 
-                userDbModel.UserProfileId = createdUserProfileId;
+                userDbModel.UserProfile.Id = createdUserProfileId;
                 await db.ExecuteAsync(query, userDbModel);
                 transaction.Commit();
             }
